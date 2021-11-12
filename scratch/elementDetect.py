@@ -1,5 +1,4 @@
 import cv2
-import imutils
 import numpy as np
 
 radius=25
@@ -7,6 +6,9 @@ radius=25
 MIN_AREA=25
 # max ratio does not apply if area of child contour is less than MIN_AREA
 MAX_RATIO=10000
+import logger
+
+ICON_LIBRARY={}
 #area of the parent contour to the child contour , if the ratio is bigger than MAX_RATIO, then the child
 #contour will be considered as icon
 def crop_at_mouse(img, mousex, mousey, radius=50):
@@ -22,11 +24,13 @@ def crop_at_mouse(img, mousex, mousey, radius=50):
     return img[t:b, l:r],(mousex,mousey)
 radius=50
 
-ICON_LIBRARY={}
+
 def get_name(new_icon):
-    return "icon"+str(len(ICON_LIBRARY))
+    return "icon"+str(len(ICON_LIBRARY.keys()))
+
 def add_to_library(new_icon):
     g=get_name(new_icon)
+    print(list(ICON_LIBRARY.keys()))
     ICON_LIBRARY[g]= new_icon
     return g
 def get_mouse_loc(event, x, y, flags, param):
@@ -34,11 +38,10 @@ def get_mouse_loc(event, x, y, flags, param):
     img=param["img"]
     if event == cv2.EVENT_LBUTTONDOWN:
         mousex, mousey = x, y
-        print(mousex, mousey)
+        #printmousex, mousey)
         c,mouse_pt=crop_at_mouse(img,mousex,mousey,radius)
         large_image=c
-        midx = int(radius)
-        midy = int(radius)
+        midx,midy=mouse_pt
         matched_image=None
         # loop through all bitmaps in ICON_LIBRARY
         for k, small_image in ICON_LIBRARY.items():
@@ -59,22 +62,25 @@ def get_mouse_loc(event, x, y, flags, param):
                 # Step 3: Draw the rectangle on large_image
                 rect = (MPx, MPy, MPx + tcols, MPy + trows)
                 # check if midx and midy are in rect
-                if MPx < midx < MPx + tcols and MPy < midy < MPy + trows:
-                #if True:
-                    print("mouse is in icon")
-                    cv2.rectangle(large_image, (MPx, MPy), (MPx + tcols, MPy + trows), (0, 0, 255), 2)
+                #if MPx < midx < MPx + tcols and MPy < midy < MPy + trows:
+                if True:
+                    #print("mouse is in icon")
+                    l  =large_image.copy()
+                    cv2.rectangle(l, (MPx, MPy), (MPx + tcols, MPy + trows), (0, 0, 255), 2)
                     # Display the original image with the rectangle around the match.
-                    cv2.circle(large_image, (midx, midy), 10, (0, 0, 255), -1)
-                    cv2.imshow('output', large_image)
-                    cv2.waitKey(0)
+                    cv2.circle(l,(midx, midy), 10, (0, 0, 255), -1)
+                    cv2.imshow('output', l)
+                    #cv2.waitKey(0)
+                    logger.print_log("RUN", "ICON clicked", k)
         if(matched_image is None):
             # try and detect any new icons that were clicked
             new_icon = get_all_icons(c,mouse_pt)
             if(new_icon is not None):
                 #add new icon to library
-                print("add icon to library:")
+                #print("add icon to library:")
                 name=add_to_library(new_icon)
-                print("new icon added to library:", name)
+                logger.print_log("RUN", "ADDED TO LIBRARY", name)
+                #print("new icon added to library:", name)
 
 
 
@@ -143,7 +149,7 @@ def get_all_icons(img, mouse_point, verbose=True):
         # get the parent of min_c
         parent_index = hier_min_c[3]
         if (parent_index == -1):
-            #print("no more parents")
+            ##print"no more parents")
             par=cnts[min_c_index]
             break
         par = cnts[parent_index]
@@ -159,7 +165,7 @@ def get_all_icons(img, mouse_point, verbose=True):
         # find the area of parent contour
         parent_area = cv2.contourArea(par)
         # find the ratio of the area of parent to min_c, if bigger than MAX_RATIO, break
-        #print("area ratio", parent_area / min_area, MAX_RATIO)
+        ##print"area ratio", parent_area / min_area, MAX_RATIO)
         if parent_area / min_area > MAX_RATIO and min_area > MIN_AREA:
             break
         # find the index of par in cnts
@@ -182,7 +188,8 @@ def get_all_icons(img, mouse_point, verbose=True):
     return img_crop
 
 def test():
-    ICON_LIBRARY["icon1"]= cv2.imread("test icon 2.png")
+    logger.set_logfield("RUN")
+    #ICON_LIBRARY["icon1"]= cv2.imread("test icon 2.png")
     img= cv2.imread("sample desktop2.png")
     get_mouse_loc_img(img, radius=50)
 test()
