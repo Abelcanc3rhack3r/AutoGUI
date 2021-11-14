@@ -1,12 +1,14 @@
 import cv2
 import numpy as np
 
+from AutoGUI.cv.textRecognizer import Rect
+
 radius=25
 
 MIN_AREA=25
 # max ratio does not apply if area of child contour is less than MIN_AREA
 MAX_RATIO=10000
-import logger
+#mport logger2
 
 ICON_LIBRARY={}
 #area of the parent contour to the child contour , if the ratio is bigger than MAX_RATIO, then the child
@@ -71,7 +73,7 @@ def get_mouse_loc(event, x, y, flags, param):
                     cv2.circle(l,(midx, midy), 10, (0, 0, 255), -1)
                     cv2.imshow('output', l)
                     #cv2.waitKey(0)
-                    logger.print_log("RUN", "ICON clicked", k)
+                    logger2.print_log("RUN", "ICON clicked", k)
         if(matched_image is None):
             # try and detect any new icons that were clicked
             new_icon = get_all_icons(c,mouse_pt)
@@ -79,10 +81,36 @@ def get_mouse_loc(event, x, y, flags, param):
                 #add new icon to library
                 #print("add icon to library:")
                 name=add_to_library(new_icon)
-                logger.print_log("RUN", "ADDED TO LIBRARY", name)
+                logger2.print_log("RUN", "ADDED TO LIBRARY", name)
                 #print("new icon added to library:", name)
 
 
+def icon_on_screen(screenshot,matched_icon):
+    large_image = screenshot
+
+    small_image = matched_icon
+    method = cv2.TM_CCOEFF_NORMED
+    # small_image = np.uint8(small_image)
+    # large_image = np.uint8(large_image)
+    result = cv2.matchTemplate(small_image, large_image, method)
+    # We want the minimum squared difference
+    mn, mx, mnLoc, mxLoc = cv2.minMaxLoc(result)
+    threshold = 0.9
+    if (mx > threshold):
+        # Draw the rectangle:
+        # Extract the coordinates of our best match
+        MPx, MPy = mxLoc
+        # Step 2: Get the size of the template. This is the same size as the match.
+        trows, tcols = small_image.shape[:2]
+
+        # Step 3: Draw the rectangle on large_image
+        #rect = (MPx, MPy, MPx + tcols, MPy + trows)
+        rect= Rect(x= MPx,y=Mpy,width=tcols, height=trows, text ="")
+        # check if midx and midy are in rect
+        # if MPx < midx < MPx + tcols and MPy < midy < MPy + trows:
+        if True:
+            return rect
+    return None
 
 
 
@@ -188,8 +216,9 @@ def get_all_icons(img, mouse_point, verbose=True):
     return img_crop
 
 def test():
-    logger.set_logfield("RUN")
+    #.set_logfield("RUN")
     #ICON_LIBRARY["icon1"]= cv2.imread("test icon 2.png")
     img= cv2.imread("sample desktop2.png")
     get_mouse_loc_img(img, radius=50)
-test()
+if __name__ =="__main__":
+    test()

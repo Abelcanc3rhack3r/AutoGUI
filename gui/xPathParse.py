@@ -2,7 +2,8 @@
 from dataclasses import dataclass
 
 import utils
-import buttonRecognizer
+from AutoGUI.scratch import buttonRecognizer
+
 #e.g "Copy", left of "Paste" and below "Toolbar"
 KEYWORDS=["left of", "right of","below", "above"]
 AXIAL_WEIGHT=1
@@ -22,16 +23,16 @@ def filter_orient(orient, boxd, tupes):
 def score_name(name, box):
     #score = 1E6
     loss= utils.levenshtein(name, box.text)
-    if(loss>buttonRecognizer.Rect.MIN_EDIT_DIST):
+    if(loss> buttonRecognizer.Rect.MIN_EDIT_DIST):
         loss= 1E6
-    loss*=buttonRecognizer.Rect.NAME_LOSS
+    loss*= buttonRecognizer.Rect.NAME_LOSS
 
     return loss
 def score_orient(orient, subject_box, query_box):
     score=1E6
     dx= abs(subject_box.midX-query_box.midX)
     dy = abs(subject_box.midY - query_box.midY)
-    AL=buttonRecognizer.Rect.ALIGN_LOSS
+    AL= buttonRecognizer.Rect.ALIGN_LOSS
     if (orient == "l"):
         score= AL*dy + dx
     if (orient == "r"):
@@ -130,8 +131,8 @@ def parse(string, boxes, verbose=False):
         if(verbose):
             print("parse command ", assoc_kw, ":", c)
         subject_box_name = c.replace(assoc_kw, "").strip()
-        subject_boxes = [(utils.levenshtein(box.text, subject_box_name)*buttonRecognizer.Rect.NAME_LOSS,box) for box in boxes]
-        subject_boxes = [tup for tup in subject_boxes if tup[0] <= buttonRecognizer.Rect.MIN_EDIT_DIST*buttonRecognizer.Rect.NAME_LOSS]
+        subject_boxes = [(utils.levenshtein(box.text, subject_box_name) * buttonRecognizer.Rect.NAME_LOSS, box) for box in boxes]
+        subject_boxes = [tup for tup in subject_boxes if tup[0] <= buttonRecognizer.Rect.MIN_EDIT_DIST * buttonRecognizer.Rect.NAME_LOSS]
         if("left" in assoc_kw):
             for obj in scores:
                 rect = obj.rect

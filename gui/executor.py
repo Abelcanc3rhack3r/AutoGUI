@@ -1,20 +1,111 @@
+import re
 
-
-def change_focus_click(x,y):
-    print("click1")
-    pyautogui.click(x, y)
-    time.sleep(5)
-    print("click2")
-    pyautogui.click(x, y)
+import pyautogui
+from AutoGUI.cv import elementDetect
+from AutoGUI.cv import textRecognizer
 
 
 
+TEXTBOXES= {}
+ICONS={}
 
-def click_button(text, verbose=False):
-    def loop_buttons(screen_buttons):
+def click(screenshot,btnToClick):
+    for btnName, btn in elementDetect.ICON_LIBRARY.items():
+        if(btnName == btnToClick):
+            rect= elementDetect.icon_on_screen(screenshot, btn)
+            if(rect):
+                print("rect detected on screen")
+
+
+
+
+def loop():
+    global ICONS
+    global TEXTBOXES
+
+
+    screenshot= pyautogui.screenshot()
+
+    for btnName, btn in elementDetect.ICON_LIBRARY.items():
+        rect = elementDetect.icon_on_screen(screenshot, btn)
+        if (rect):
+            ICONS[btnName]=btn
+    #detect all the textboxes in image
+    TEXTBOXES = textRecognizer.scan_image(screenshot)
+
+
+coms = ["click", "type"]
+
+
+def execute(script):
+    # split script into lines
+    lines = script.split('\n')
+    # remove comments
+    lines = [line for line in lines if not line.startswith('#')]
+    # remove empty lines
+    lines = [line for line in lines if line]
+    # remove leading and trailing whitespace
+    lines = [line.strip() for line in lines]
+
+    for line in lines:
+        loop()
+        for com in coms:
+            if (com in line):
+                # extract the string in brackets
+
+                if (com == "click"):
+                    string = re.search(r'\((.*?)\)', line).group(1)
+                    print("execuuted:",string)
+                    click(string)
+                if (com == "type"):
+                    string = re.search(r'\((.*?)\)', line).group(1)
+                    print("executed:",string)
+                    type(string)
+
+
+
+
+
+def click(btn_name):
+    def contains(text, lis):
+        # return the element in lis that contains text
+        for item in lis:
+            if (text in item):
+                return item
+        return None
+    try:
+        #pyautogui click
+        ele=contains(btn_name,TEXTBOXES.keys())
+        if (ele is not None):
+                midx,midy = TEXTBOXES[ele].midX, TEXTBOXES[ele].midY
+                pyautogui.click(midx,midy)
+        ele = contains(btn_name, ICONS.keys())
+        if (ele is not None):
+            midx, midy = ICONS[ele].midX, ICONS[ele].midY
+            pyautogui.click(midx, midy)
+    except:
+        print("button not found")
+
+
+def type(string):
+    pyautogui.typewrite(string)
+
+
+
+def test():
+    script="click (Google)"
+    execute(script)
+
+if __name__ == '__main__':
+    test()
+
+
+'''
+def loop_buttons(screen_buttons):
         for box in screen_buttons:
             btext = box.text
-            match = utils.levenshtein(btext, text)
+            #match = utils.levenshtein(btext, text)
+            match=""
             #if (verbose):
                 #print("match button text: btext:", btext, " to query:", text)
             if (match <= Rect.MIN_EDIT_DIST):
@@ -62,9 +153,4 @@ def click_button(text, verbose=False):
         change_focus_click(button.midX, button.midY)
 
         return button
-
-
-
-
-
-
+'''

@@ -2,16 +2,13 @@ from datetime import time
 
 import cv2
 
-import numpy as np
 import pyautogui
 
-import buttonRecognizer
 import utils
 import detectText
 screenshot= cv2.imread("sample.png")
 
 from pynput.mouse import Listener
-from pynput.mouse import Button, Controller
 from ..cv import elementDetect
 
 def detect_pressed_btn(x,y):
