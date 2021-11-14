@@ -91,6 +91,33 @@ class Rect:
         return False
 
     @staticmethod
+    def is_beside_y(box1, box2):
+        # both the left and the right of the buttons must be aligned to merge
+        dx1 = abs(box1.x - box2.x)
+        dx2 = abs((box1.x + box1.width) - (box2.x + box2.width))
+
+        dy1 = abs((box2.y) - (box1.y + box1.height))
+        dy2 = abs((box1.y) - (box2.y + box2.height))
+        dy = min(dy1, dy2)
+        if (max(dx1, dx2) <= Rect.MERGE_TEXTBOX_XDIST and dy <= Rect.MERGE_TEXTBOX_YDIST):
+            return True
+        return False
+
+    @staticmethod
+    def merge_textbox_y(box1, box2, image):
+        l = min(box1.x, box2.x)
+        t = min(box1.y, box2.y)
+        r = max(box1.x + box1.width, box2.x + box2.width)
+        b = max(box1.y + box1.height, box2.y + box2.height)
+        if (box1.y <= box2.y):
+            text = box1.text + " " + box2.text
+        else:
+            text = box2.text + " " + box1.text
+
+        newbox = Rect(l, t, r - l, b - t, text)
+        #newbox.vicinity = Rect.get_vicinity(newbox, image)
+        return newbox
+    @staticmethod
     def merge_textbox(box1, box2,image):
         l = min(box1.x, box2.x)
         t= min(box1.y, box2.y)
@@ -100,9 +127,22 @@ class Rect:
             text= box1. text +" "+ box2.text
         else:
             text = box2.text + " " + box1.text
+
         newbox= Rect(l, t,r-l,b-t, text)
-        newbox.vicinity= get_vicinity(newbox,image)
+        #newbox.vicinity= Rect.get_vicinity(newbox,image)
         return newbox
+    def get_vicinity(box, image, verbose=False):
+        # cuts out the vicinity of the box, expected to be the same if the text is right
+        margin = Rect.VICINITY_MARGIN
+        vic = int(max(box.x - margin, 0)), int(max(box.y - margin, 0)), int(box.x + box.width + margin), int(
+            box.y + box.height + margin)
+
+        clip = image[vic[1]: vic[3], vic[0]:vic[2]]
+        # box.vicinity= clip
+        if (verbose):
+            cv2.imshow("vicinity" + box.text, clip)
+            cv2.waitKey(0)
+        return clip
 
     @staticmethod
     def merge_all_textboxes(boxes,image,  verbose=False):
@@ -123,6 +163,15 @@ class Rect:
                         addeds.append(merged_box)
                         if(verbose):
                             print("merge ", bx1. text, " and ", bx2.text)
+                        copiedlist.remove(bx1)
+                        copiedlist.remove(bx2)
+                        return True
+                    elif (Rect.is_beside_y(bx1,bx2)):
+                        merged_box= Rect.merge_textbox_y(bx1,bx2,image)
+                        copiedlist.append(merged_box)
+                        addeds.append(merged_box)
+                        if(verbose):
+                            print("merge ", bx1. text, " and ", bx2.text, "top")
                         copiedlist.remove(bx1)
                         copiedlist.remove(bx2)
                         return True
@@ -249,12 +298,13 @@ def get_text_boxes(screenshot, verbose=False, callerd=""):
                 cv2.rectangle(image1, (x, y), (x + w, y + h), (0, 255, 0), 2)
                 cv2.putText(image1, text, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX,
                                 0.5, (0, 0, 255), 1)
-                print("found text:", text)
+                #print("found text:", text)
                 #if (verbose and "and" in text):
                     #print(rects.index(rect),":",rect.text)
                     #rect.draw_vicinity()
     if(verbose):
-        print("write",callerd+".jpg")
+        #pass
+        #print("write",callerd+".jpg")
         #cv2.imwrite(callerd+".jpg", image1)
         cv2.imshow("Image", image1)
         cv2.waitKey(100)
@@ -273,7 +323,9 @@ def scan_image(img, size=(50,200), stride=50):
             rects=get_text_boxes(box,True)
             for rect in rects:
                 rect.offset(x,y)
+                print(f"{rect.text} found")
                 all_rects[rect.text]= rect
+        break
         #break
         #show the box
             #cv2.imshow('box', img[x:x+size[0], y:y+size[1]])
@@ -281,16 +333,25 @@ def scan_image(img, size=(50,200), stride=50):
     for rect in all_rects.values():
         print(rect)
         rect.draw_box(img)
+
     cv2.imshow("textboxes", img)
     cv2.waitKey(0)
-    return boxes
+    all_rects1 = {}
+    textboxes = Rect.merge_all_textboxes(list(all_rects.values()), img,verbose=True)
+    for rect in textboxes:
+        all_rects1[rect.text] = rect
+
+    return all_rects
 run_script="click Edit \n click Find"
 
 def test():
     #logger.set_logfield("RUN")
     #ICON_LIBRARY["icon1"]= cv2.imread("test icon 2.png")
-    img= cv2.imread("sample desktop 3.png")
-    scan_image(img, (50,200),50)
+    img= cv2.imread("../scratch/google chrome.png")
+    #boxes=get_text_boxes(img,verbose=True)
+    scan_image(img)
+    #Rect.merge_all_textboxes(boxes, img, verbose=True)
+    #scan_image(img, (50,200),50)
     #get_mouse_loc_img(img, radius=50)
 if(__name__ =="__main__"):
     test()

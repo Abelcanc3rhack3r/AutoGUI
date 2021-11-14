@@ -1,11 +1,12 @@
 import re
+import time
 
 import pyautogui
 from AutoGUI.cv import elementDetect
 from AutoGUI.cv import textRecognizer
 
 
-
+import AutoGUI.utils as utils
 TEXTBOXES= {}
 ICONS={}
 
@@ -25,7 +26,7 @@ def loop():
 
 
     screenshot= pyautogui.screenshot()
-
+    screenshot=utils.PIL_to_cv2(screenshot)
     for btnName, btn in elementDetect.ICON_LIBRARY.items():
         rect = elementDetect.icon_on_screen(screenshot, btn)
         if (rect):
@@ -34,7 +35,7 @@ def loop():
     TEXTBOXES = textRecognizer.scan_image(screenshot)
 
 
-coms = ["click", "type"]
+coms = ["double click","click", "type"]
 
 
 def execute(script):
@@ -52,39 +53,69 @@ def execute(script):
         for com in coms:
             if (com in line):
                 # extract the string in brackets
-
-                if (com == "click"):
+                if (com == "double click"):
+                    string = re.search(r'\((.*?)\)', line).group(1)
+                    print("double execuuted:",string)
+                    click(string,double=True)
+                    break
+                elif (com == "click"):
                     string = re.search(r'\((.*?)\)', line).group(1)
                     print("execuuted:",string)
                     click(string)
-                if (com == "type"):
+                    break
+                elif (com == "type"):
                     string = re.search(r'\((.*?)\)', line).group(1)
                     print("executed:",string)
                     type(string)
+                    break
 
 
 
 
-
-def click(btn_name):
+def delayed_click(x,y):
+    pyautogui.click(x, y)
+    time.sleep(0.5)
+    pyautogui.click(x, y)
+    print(x,y)
+def click(btn_name,double=False):
     def contains(text, lis):
         # return the element in lis that contains text
         for item in lis:
             if (text in item):
                 return item
-        return None
-    try:
+        #give levenshtein score to all the items in lis
+        newlis=[]
+        for i in lis:
+            max_score = utils.localAlign(i, i)[0]
+            if(max_score==0):
+                continue
+            score=utils.localAlign(text,i)[0]
+            newlis.append((score/max_score,i))
+        #filter newlis for score above THRESH
+
+        #newlis=filter(lambda x: x[0]>THRESH, newlis)
+        #sort newlis by score
+        newlis.sort(key=lambda x: x[0])
+        #return the item with the highest score
+        return newlis[-1][1]
+    if(True):
         #pyautogui click
-        ele=contains(btn_name,TEXTBOXES.keys())
+        ele=contains(btn_name,list(TEXTBOXES.keys()))
         if (ele is not None):
                 midx,midy = TEXTBOXES[ele].midX, TEXTBOXES[ele].midY
-                pyautogui.click(midx,midy)
-        ele = contains(btn_name, ICONS.keys())
+                if(double):
+                    pyautogui.doubleClick(midx,midy)
+                else:
+                    pyautogui.click(midx,midy)
+        ele = contains(btn_name, list(ICONS.keys()))
         if (ele is not None):
             midx, midy = ICONS[ele].midX, ICONS[ele].midY
-            pyautogui.click(midx, midy)
-    except:
-        print("button not found")
+            if (double):
+                pyautogui.doubleClick(midx, midy)
+            else:
+                pyautogui.click(midx, midy)
+    #except:
+        #print("button not found")
 
 
 def type(string):
@@ -93,7 +124,8 @@ def type(string):
 
 
 def test():
-    script="click (Google)"
+    #pyautogui.doubleClick(36,275)
+    script="double click (Google Chrome)"
     execute(script)
 
 if __name__ == '__main__':
