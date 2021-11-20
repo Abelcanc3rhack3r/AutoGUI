@@ -41,7 +41,7 @@ coms = ["double click","click", "type"]
 def execute(script):
     # split script into lines
     lines = script.split('\n')
-    # remove comments
+    # remove commentsp
     lines = [line for line in lines if not line.startswith('#')]
     # remove empty lines
     lines = [line for line in lines if line]
@@ -87,9 +87,10 @@ def click(btn_name,double=False):
         newlis=[]
         for i in lis:
             max_score = utils.localAlign(i, i)[0]
-            if(max_score==0):
-                continue
+            #if(max_score==0):
+                #continue
             score=utils.localAlign(text,i)[0]
+            print(i, text, score, max_score)
             newlis.append((score/max_score,i))
         #filter newlis for score above THRESH
 

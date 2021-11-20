@@ -311,7 +311,7 @@ def get_text_boxes(screenshot, verbose=False, callerd=""):
     return rects
 
 
-def scan_image(img, size=(50,200), stride=50):
+def scan_image(img, size=(50,200), stride=50,verbose=False):
     #get boxes of size (sizex,sizey) every stridex, stridey of image
     #returns list of boxes
     boxes = []
@@ -330,24 +330,23 @@ def scan_image(img, size=(50,200), stride=50):
         #show the box
             #cv2.imshow('box', img[x:x+size[0], y:y+size[1]])
             #cv2.waitKey(0)
+
+    textboxes = Rect.merge_all_textboxes(list(all_rects.values()), img)
+    for rect in textboxes:
+        all_rects[rect.text] = rect
     for rect in all_rects.values():
         print(rect)
         rect.draw_box(img)
-
-    cv2.imshow("textboxes", img)
-    cv2.waitKey(0)
-    all_rects1 = {}
-    textboxes = Rect.merge_all_textboxes(list(all_rects.values()), img,verbose=True)
-    for rect in textboxes:
-        all_rects1[rect.text] = rect
-
+    if(verbose):
+        cv2.imshow("textboxes", img)
+        cv2.waitKey(0)
     return all_rects
 run_script="click Edit \n click Find"
 
 def test():
     #logger.set_logfield("RUN")
     #ICON_LIBRARY["icon1"]= cv2.imread("test icon 2.png")
-    img= cv2.imread("../scratch/google chrome.png")
+    img= cv2.imread("../scratch/bin chrome.png")
     #boxes=get_text_boxes(img,verbose=True)
     scan_image(img)
     #Rect.merge_all_textboxes(boxes, img, verbose=True)
