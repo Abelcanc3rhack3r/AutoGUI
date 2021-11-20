@@ -9,7 +9,14 @@ given some initial parameters ,and the information available to the user on the 
 (in the form of filenames, text blocks ) completely determines
 the series of steps to be executed in the SOP.
 
-This program aims to
+
+Currently, macros are available for many apps. Windows power automate hosts automation interfaces for many windows apps.
+However, a universal AutoGUI interface which allows cross-app automation for all possible apps with a UI has not been well documented. 
+
+This program aims to replicate as many manual procedures done with the windows/ any platform GUI as possible.
+This may include: browser GUI automation, App GUI automation, command line automation etc etc. The app is designed to interact indirectly with the output 
+from the screen as well as elements on the screen (in the form of screenshots) , and not via API to any application interface. Thus, the app strives to be platform and
+App agnostic.
 
 
 For example, say an admin has an excel sheet of the 
@@ -19,11 +26,7 @@ then the next step would be to visit the NTUC fairprice website to
 make a purchase, and if the supplier name is Watsons, then
 she must appropriately visit the Watsons website.
 
-Administration also frequently involve the filling in of forms,
-and usually involves inputting information which
-the admin retrieves from somewhere else on the computer
-( usually the admin had to open the up  file and eyeball the info).
-
+Administrati
 
 What this App Aims to Do:
 
